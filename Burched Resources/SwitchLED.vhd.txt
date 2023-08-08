@@ -1,0 +1,65 @@
+-- File: 			
+--			SwitchLED.vhd
+-- Other source files needed:
+--			None
+-- Abstract:
+--			The signals from the Switches are registered and
+--			output to the LEDs.
+--			LED output signals go high when Rst is active - allows
+--			lamp test.
+--  Notices:
+-- 		(C) Copyright 2002 Burch Electronic Designs, All Rights Reserved.
+--			This code is intended for academic, teaching and research purposes.
+--			All references and sources consulted in producing this code are cited below.
+--			Please cite all references and sources in any derivative works.
+-- References:
+--			1. Keating, M. and Bricaud, P., Reuse Methodology Manual for
+--			System-On-A-Chip Designs, Kluwer Academic Publishers, 2000.
+-- References notes:
+--			Coding practices in [1] were consulted.
+-- Author:
+--			Burch Electronic Designs, http://www.BurchED.com	
+-- Target Device:
+--			XC2S300e-6PQ208C
+-- Build Environment:
+--			WebPACK 4.1
+-- Target Boards:
+--			B5-Spartan2e+
+--			B5-Switches
+--			B5-LEDS
+-- Clk Frequency:
+--			48.0 MHz
+-- Modification History:
+--			Last updated 10 August 2002
+-- Notes:
+--			Number of Slices for implementation = 23.
+
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.STD_LOGIC_ARITH.ALL;
+use IEEE.STD_LOGIC_UNSIGNED.ALL;
+
+entity SwitchLED is
+	Port (
+		Clk : in STD_LOGIC;
+		Rst : in STD_LOGIC;
+		Switch : in STD_LOGIC_VECTOR(15 downto 0);
+		LED : out STD_LOGIC_VECTOR(15 downto 0)
+	);
+end SwitchLED;
+
+architecture RTL of SwitchLED is
+begin
+
+	-- Register bank
+	process (Clk, Rst)
+	begin
+		if (Rst = '1') then
+			Led <= (others => '1'); -- lamp test
+		elsif (Clk'event and Clk='1') then
+			Led <= Switch;
+		end if;
+	end process;
+
+end RTL;
+

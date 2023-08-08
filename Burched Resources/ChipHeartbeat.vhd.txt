@@ -1,0 +1,79 @@
+-- File: 			
+--			ChipHeartbeat.vhd
+-- Abstract:
+--			Simple chip level design which instantiates the
+--			Heartbeat component.
+--  Notices:
+-- 		(C) Copyright 2002 Burch Electronic Designs, All Rights Reserved.
+--			This code is intended for academic, teaching and research purposes.
+--			All references and sources consulted in producing this code are cited below.
+--			Please cite all references and sources in any derivative works.
+-- References:
+--			1. Keating, M. and Bricaud, P., Reuse Methodology Manual for
+--			System-On-A-Chip Designs, Kluwer Academic Publishers, 2000.
+-- References notes:
+--			Coding practices in [1] were consulted.
+-- Author:
+--			Burch Electronic Designs, http://www.BurchED.com	
+-- Target Device:
+--			XC2S300e-6PQ208C
+-- Build Environment:
+--			WebPACK 4.1
+-- Target Boards:
+--			B5-Spartan2e+
+-- Clk Frequency:
+--			48.0 MHz
+-- Modification History:
+--			Last updated 6 August 2002
+-- Notes:
+--			Number of Slices for implementation = 24.
+-- User constraints
+-- 		(Copy these constraints into your UCF file - don't forget
+--			to delete the "--" at the beginning of each line):
+--NET "clk" LOC = "P77";
+--NET "singleled" LOC = "P82";
+--NET "rst_n" LOC = "P57";
+
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.STD_LOGIC_ARITH.ALL;
+use IEEE.STD_LOGIC_UNSIGNED.ALL;
+
+entity ChipHeartbeat is
+	Port (
+		Clk : in STD_LOGIC;
+		Rst_n : in STD_LOGIC;
+		SingleLed : out STD_LOGIC
+	);
+end ChipHeartbeat;
+
+architecture RTL of ChipHeartbeat is
+-- Declare the Heartbeat component
+component Heartbeat
+	Port (
+		Clk : in STD_LOGIC;
+		Rst : in STD_LOGIC;
+		Led : out STD_LOGIC
+	);
+end component;
+signal Buf_Rst_n : STD_LOGIC;
+signal Rst : STD_LOGIC;
+begin
+	Buf_Rst_n <= Rst_n;
+	-- Register the reset signal
+	process (Clk)
+	begin
+		if (Clk'event and Clk='1') then
+			Rst <= not Buf_Rst_n;
+		end if;
+	end process;
+			
+	-- Instantiate the Heartbeat component
+	uHeartbeat0 : Heartbeat port map (
+		Clk => Clk,
+		Rst => Rst,
+		Led => SingleLed
+	);
+
+end RTL;
+

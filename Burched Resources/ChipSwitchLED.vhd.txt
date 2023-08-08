@@ -1,0 +1,134 @@
+-- File: 			
+--			ChipSwitchLED.vhd
+-- Other source files needed:
+--			Heartbeat.vhd
+--			SwitchLED.vhd
+-- Abstract:
+--			Chip level design.  SwitchLED component registers the Switch inputs,
+--			and drives the LED outputs.  Heartbeat component flashes the single LED.
+--  Notices:
+-- 		(C) Copyright 2002 Burch Electronic Designs, All Rights Reserved.
+--			This code is intended for academic, teaching and research purposes.
+--			All references and sources consulted in producing this code are cited below.
+--			Please cite all references and sources in any derivative works.
+-- References:
+--			1. Keating, M. and Bricaud, P., Reuse Methodology Manual for
+--			System-On-A-Chip Designs, Kluwer Academic Publishers, 2000.
+-- References notes:
+--			Coding practices in [1] were consulted.
+-- Author:
+--			Burch Electronic Designs, http://www.BurchED.com	
+-- Target Device:
+--			XC2S300e-6PQ208C
+-- Build Environment:
+--			WebPACK 4.1
+-- Target Boards:
+--			B5-Spartan2e+
+--			B5-Switches
+--			B5-LEDS
+-- Clk Frequency:
+--			48.0 MHz
+-- Modification History:
+--			Last updated 10 August 2002
+-- Notes:
+--			Number of Slices for implementation = 24.
+-- User constraints
+-- 		(copy these constraints into your UCF file - don't forget
+--			to delete the "--" at the beginning of each line):
+--NET "clk" LOC = "P77";
+--NET "singleled" LOC = "P82";
+--NET "rst_n" LOC = "P57";
+--NET "led<0>" LOC = "P102";
+--NET "led<1>" LOC = "P101";
+--NET "led<2>" LOC = "P100";
+--NET "led<3>" LOC = "P99";
+--NET "led<4>" LOC = "P98";
+--NET "led<5>" LOC = "P97";
+--NET "led<6>" LOC = "P96";
+--NET "led<7>" LOC = "P95";
+--NET "led<8>" LOC = "P94";
+--NET "led<9>" LOC = "P93";
+--NET "led<10>" LOC = "P89";
+--NET "led<11>" LOC = "P88";
+--NET "led<12>" LOC = "P87";
+--NET "led<13>" LOC = "P86";
+--NET "led<14>" LOC = "P84";
+--NET "led<15>" LOC = "P83";
+--NET "switch<0>" LOC = "P81";
+--NET "switch<1>" LOC = "P75";
+--NET "switch<2>" LOC = "P74";
+--NET "switch<3>" LOC = "P73";
+--NET "switch<4>" LOC = "P71";
+--NET "switch<5>" LOC = "P70";
+--NET "switch<6>" LOC = "P69";
+--NET "switch<7>" LOC = "P68";
+--NET "switch<8>" LOC = "P64";
+--NET "switch<9>" LOC = "P63";
+--NET "switch<10>" LOC = "P62";
+--NET "switch<11>" LOC = "P61";
+--NET "switch<12>" LOC = "P60";
+--NET "switch<13>" LOC = "P59";
+--NET "switch<14>" LOC = "P58";
+--NET "switch<15>" LOC = "P56";
+
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.STD_LOGIC_ARITH.ALL;
+use IEEE.STD_LOGIC_UNSIGNED.ALL;
+
+entity ChipSwitchLED is
+	Port (
+		Clk : in STD_LOGIC;
+		Rst_n : in STD_LOGIC;
+		SingleLed : out STD_LOGIC;
+		Switch : in STD_LOGIC_VECTOR(15 downto 0);
+		LED : out STD_LOGIC_VECTOR(15 downto 0)
+	);
+end ChipSwitchLED;
+
+architecture RTL of ChipSwitchLED is
+component Heartbeat
+	Port (
+		Clk : in STD_LOGIC;
+		Rst : in STD_LOGIC;
+		Led : out STD_LOGIC
+	);
+end component;
+component SwitchLED
+	Port (
+		Clk : in STD_LOGIC;
+		Rst : in STD_LOGIC;
+		Switch : in STD_LOGIC_VECTOR(15 downto 0);
+		LED : out STD_LOGIC_VECTOR(15 downto 0)
+	);
+end component;
+signal Buf_Rst_n : STD_LOGIC;
+signal Rst : STD_LOGIC;
+begin
+
+	-- Register the system reset signal
+	Buf_Rst_n <= Rst_n;
+	process (Clk)
+	begin
+		if (Clk'event and Clk='1') then
+			Rst <= not Buf_Rst_n;
+		end if;
+	end process;
+
+	-- Heartbeat
+	uHeartbeat0 : Heartbeat port map (
+		Clk => Clk,
+		Rst => Rst,
+		Led => SingleLed
+	);
+
+	-- SwitchLED
+	uSwitchLED0 : SwitchLED port map (
+		Clk => Clk,
+		Rst => Rst,
+		Switch => Switch,
+		LED => LED
+	);
+
+end RTL;
+

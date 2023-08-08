@@ -1,0 +1,111 @@
+-- File: 			
+--			Heartbeat.vhd
+-- Other source files needed:
+--			None
+-- Abstract:
+--			Generates a 1Hz squarewave signal.
+--			Used to quickly verify that the system is configured, and
+--       that the system clock is working.
+--			Normally connected to an LED in the system.  
+--			The output signal goes high when Rst is active - allows
+--			lamp test.
+--  Notices:
+-- 		(C) Copyright 2002 Burch Electronic Designs, All Rights Reserved.
+--			This code is intended for academic, teaching and research purposes.
+--			All references and sources consulted in producing this code are cited below.
+--			Please cite all references and sources in any derivative works.
+-- References:
+--			1. Keating, M. and Bricaud, P., Reuse Methodology Manual for
+--			System-On-A-Chip Designs, Kluwer Academic Publishers, 2000.
+-- References notes:
+--			Coding practices in [1] were consulted.
+-- Author:
+--			Burch Electronic Designs, http://www.BurchED.com	
+-- Target Device:
+--			XC2S300e-6PQ208C
+-- Build Environment:
+--			WebPACK 4.1
+-- Target Boards:
+--			B5-Spartan2e+
+-- Clk Frequency:
+--			48.0 MHz
+-- Modification History:
+--			Last updated 6 August 2002
+-- Notes:
+--			Implemented using a state machine.
+--			Number of Slices for implementation = 23.
+
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.STD_LOGIC_ARITH.ALL;
+use IEEE.STD_LOGIC_UNSIGNED.ALL;
+
+entity Heartbeat is
+	Port (
+		Clk : in STD_LOGIC;
+		Rst : in STD_LOGIC;
+		Led : out STD_LOGIC
+	);
+end Heartbeat;
+
+architecture RTL of Heartbeat is
+
+signal ClkCount : STD_LOGIC_VECTOR (25 downto 0);
+signal GlobalClkEn : STD_LOGIC;
+
+type StateType is (LedOn, LedOff);
+signal State : StateType;
+
+begin
+
+	-- Generate GlobalClkEn signal, this sets the heartbeat rate
+	process (Clk, Rst)
+	begin
+		if (Rst = '1') then
+			ClkCount <= (others => '0');
+			GlobalClkEn <= '0';
+		elsif (Clk'event and Clk='1') then
+			if (ClkCount = 24000000) then -- 0.5 sec
+				ClkCount <= (others => '0');
+				GlobalClkEn <= '1';
+			else
+				ClkCount <= ClkCount + 1;
+				GlobalClkEn <= '0';
+			end if;					
+		end if;
+	end process;
+
+	-- State Control
+	-- (LedOn, LedOff)
+	process (Clk, Rst)
+	begin
+		if (Rst = '1') then
+			State <= LedOn; 		-- lamp test
+		elsif (Clk'event and Clk='1') then
+			if (GlobalClkEn = '1') then
+				case State is
+					when LedOff =>
+						State <= LedOn;								
+					when LedOn =>
+						State <= LedOff;	
+				end case; 			
+			end if;				
+		end if;
+	end process;
+	
+	--State Decode
+	-- (LedOn, LedOff)
+	process(State)
+	begin
+		case State is
+			when LedOff =>
+				Led <= '0';
+			when LedOn =>
+				Led <= '1';
+			when others =>
+				Led <= '1';							
+		end case;			
+	end process;
+
+end RTL;
+

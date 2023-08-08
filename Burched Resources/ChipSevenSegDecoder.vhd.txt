@@ -1,0 +1,180 @@
+-- File: 			
+--			ChipSevenSegDecoder.vhd
+-- Other source files needed:
+--			Heartbeat.vhd
+--			SevenSegDecoder.vhd
+--- Abstract:
+--			Chip level design.  Two hex digits from the Switches are
+--			displayed on the seven segment displays.
+--			Heartbeat component flashes the single LED.
+--  Notices:
+-- 		(C) Copyright 2002 Burch Electronic Designs, All Rights Reserved.
+--			This code is intended for academic, teaching and research purposes.
+--			All references and sources consulted in producing this code are cited below.
+--			Please cite all references and sources in any derivative works.
+-- References:
+--			1. Keating, M. and Bricaud, P., Reuse Methodology Manual for
+--			System-On-A-Chip Designs, Kluwer Academic Publishers, 2000.
+-- References notes:
+--			Coding practices in [1] were consulted.
+-- Author:
+--			Burch Electronic Designs, http://www.BurchED.com	
+-- Target Device:
+--			XC2S300e-6PQ208C
+-- Build Environment:
+--			WebPACK 4.1
+-- Target Boards:
+--			B5-Spartan2e+
+--			B5-Switches (Slot C)
+--			B5-7Seg-Displays (Slot D)
+-- Clk Frequency:
+--			48.0 MHz
+-- Modification History:
+--			Last updated 10 August 2002
+-- Notes:
+--			Number of Slices for implementation = 23.
+-- User constraints
+-- 		(copy these constraints into your UCF file - don't forget
+--			to delete the "--" at the beginning of each line):
+--NET "clk" LOC = "P77";
+--NET "singleled" LOC = "P82";
+--NET "rst_n" LOC = "P57";
+--NET "b0" LOC = "P102";
+--NET "a0" LOC = "P101";
+--NET "f0" LOC = "P100";
+--NET "g0" LOC = "P99";
+--NET "c0" LOC = "P98";
+--NET "d0" LOC = "P97";
+--NET "e0" LOC = "P96";
+--NET "b1" LOC = "P95";
+--NET "a1" LOC = "P94";
+--NET "f1" LOC = "P93";
+--NET "g1" LOC = "P89";
+--NET "c1" LOC = "P88";
+--NET "d1" LOC = "P87";
+--NET "e1" LOC = "P86";
+--NET "dp1" LOC = "P84";
+--NET "dp0" LOC = "P83";
+--NET "switch<0>" LOC = "P81";
+--NET "switch<1>" LOC = "P75";
+--NET "switch<2>" LOC = "P74";
+--NET "switch<3>" LOC = "P73";
+--NET "switch<4>" LOC = "P71";
+--NET "switch<5>" LOC = "P70";
+--NET "switch<6>" LOC = "P69";
+--NET "switch<7>" LOC = "P68";
+
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.STD_LOGIC_ARITH.ALL;
+use IEEE.STD_LOGIC_UNSIGNED.ALL;
+
+entity ChipSevenSegDecoder is
+	Port (
+		Clk : in STD_LOGIC;
+		Rst_n : in STD_LOGIC;
+		SingleLed : out STD_LOGIC;
+		Switch : in STD_LOGIC_VECTOR(7 downto 0);
+		a0 : out STD_LOGIC;
+		b0 : out STD_LOGIC;
+		c0 : out STD_LOGIC;
+		d0 : out STD_LOGIC;
+		e0 : out STD_LOGIC;
+		f0 : out STD_LOGIC;
+		g0 : out STD_LOGIC;
+		dp0 : out STD_LOGIC;
+		a1 : out STD_LOGIC;
+		b1 : out STD_LOGIC;
+		c1 : out STD_LOGIC;
+		d1 : out STD_LOGIC;
+		e1 : out STD_LOGIC;
+		f1 : out STD_LOGIC;
+		g1 : out STD_LOGIC;
+		dp1 : out STD_LOGIC
+	);
+end ChipSevenSegDecoder;
+
+architecture RTL of ChipSevenSegDecoder is
+component Heartbeat
+	Port (
+		Clk : in STD_LOGIC;
+		Rst : in STD_LOGIC;
+		Led : out STD_LOGIC
+	);
+end component;
+component SevenSegDecoder
+	Port (
+		Clk : in STD_LOGIC;
+		Rst : in STD_LOGIC;
+		HexDigit : in STD_LOGIC_VECTOR(3 downto 0);
+		DecimalPoint : in STD_LOGIC;
+		a : out STD_LOGIC;
+		b : out STD_LOGIC;
+		c : out STD_LOGIC;
+		d : out STD_LOGIC;
+		e : out STD_LOGIC;
+		f : out STD_LOGIC;
+		g : out STD_LOGIC;
+		dp : out STD_LOGIC
+	);
+end component;
+signal Buf_Rst_n : STD_LOGIC;
+signal Rst : STD_LOGIC;
+signal DecimalPoint0 : STD_LOGIC;
+signal DecimalPoint1 : STD_LOGIC;
+begin
+
+	-- Register the system reset signal
+	Buf_Rst_n <= Rst_n;
+	process (Clk)
+	begin
+		if (Clk'event and Clk='1') then
+			Rst <= not Buf_Rst_n;
+		end if;
+	end process;
+
+	-- Heartbeat
+	uHeartbeat0 : Heartbeat port map (
+		Clk => Clk,
+		Rst => Rst,
+		Led => SingleLed
+	);
+
+	-- Tie off the decimal points, so that they are normally off
+	DecimalPoint0 <= '0';
+	DecimalPoint1 <= '0';
+
+	-- SevenSegDecoder0, hex digit 0
+	uSevenSegDecoder0 : SevenSegDecoder port map (
+		Clk => Clk,
+		Rst => Rst,
+		HexDigit => Switch(3 downto 0),
+		DecimalPoint => DecimalPoint0,
+		a => a0,
+		b => b0,
+		c => c0,
+		d => d0,
+		e => e0,
+		f => f0,
+		g => g0,
+		dp => dp0
+	);
+
+	-- SevenSegDecoder1, hex digit 1
+	uSevenSegDecoder1 : SevenSegDecoder port map (
+		Clk => Clk,
+		Rst => Rst,
+		HexDigit => Switch(7 downto 4),
+		DecimalPoint => DecimalPoint1,
+		a => a1,
+		b => b1,
+		c => c1,
+		d => d1,
+		e => e1,
+		f => f1,
+		g => g1,
+		dp => dp1
+	);
+
+end RTL;
+

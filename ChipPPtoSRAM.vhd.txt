@@ -1,0 +1,309 @@
+-- File:
+--			ChipPPtoSRAM.vhd
+-- Other source files needed:
+--			pctosraminterface-sv06.vhd, James Brennan, UQ
+--			sram512kleft16bit50mhzreadreq-sv05.vhd, James Brennan, UQ
+-- Abstract:
+--			Parallel Port to SRAM interface.
+--			Based on the "PC to SRAM Interface" design by James Brennan.
+--			Used with Windows application, XSV SRAM Utility, to write and
+--			read from SRAM.
+--  Notices:
+-- 		(C) Copyright 2004 Burch Electronic Designs, All Rights Reserved.
+--			This code is intended for academic, teaching and research purposes.
+--			All references and sources consulted in producing this code are cited below.
+--			Please cite all references and sources in any derivative works.
+-- References:
+--			PC to SRAM Interface Project, James Brennan,
+--			The University of Queensland Australia, http://www.csee.uq.edu.au
+-- References notes:
+-- Author:
+--			Burch Electronic Designs, http://www.BurchED.biz
+-- Target Device:
+--			XC2S300e-6PQ208C
+-- Build Environment:
+--			WebPACK 4.1
+-- Target Boards:
+--			B5-X300
+--			B5-Advanced-Download, 	SLOT D
+--			B5-SRAM,						SLOTS A & B
+-- Clk Frequency:
+--			48MHz
+-- Modification History:
+--			1 July 2004
+-- Notes:
+--			Number of Slices for implementation = 127 out of 3072    4%
+-- User constraints
+-- 		(copy these constraints into your UCF file - don't forget
+--			to delete the "--" at the beginning of each line):
+
+--NET "clk" LOC = "P77";
+--NET "singleled" LOC = "P74"; SWITCHES SLOT C
+--NET "rst_n" LOC = "P57";
+
+--#NET "Strobe_n" LOC = "P82";
+--#NET "Auto_Linefeed_n" LOC = "P83";
+--NET "D0" LOC = "P84";
+--NET "Error" LOC = "P86";
+--NET "D1" LOC = "P87";
+--#NET "Initialise_Printer" LOC = "P88";
+--NET "D2" LOC = "P89";
+--#NET "Select_Printer_n" LOC = "P93";
+--NET "D3" LOC = "P94";
+--NET "D4" LOC = "P95";
+--NET "D5" LOC = "P96";
+--NET "D6" LOC = "P97";
+--NET "D7" LOC = "P98";
+--NET "Ack" LOC = "P99";
+--#NET "Busy_n" LOC = "P100";
+--NET "Paper_Out" LOC = "P101";
+--NET "Select_In" LOC = "P102";
+
+--NET "DAC<0>" LOC = "P180";
+--NET "DAC<1>" LOC = "P179";
+--NET "DAC<2>" LOC = "P178";
+--NET "DAC<3>" LOC = "P176";
+--NET "DAC<4>" LOC = "P175";
+--NET "DAC<5>" LOC = "P174";
+--NET "DAC<6>" LOC = "P173";
+--NET "DAC<7>" LOC = "P169";
+
+--# SLOTS A & B
+--NET "SRAM_A<0>" LOC = "P24";
+--NET "SRAM_A<1>" LOC = "P23";
+--NET "SRAM_A<2>" LOC = "P22";
+--NET "SRAM_A<3>" LOC = "P21";
+--NET "SRAM_A<4>" LOC = "P20";
+--NET "SRAM_A<5>" LOC = "P18";
+--NET "SRAM_A<6>" LOC = "P17";
+--NET "SRAM_A<7>" LOC = "P16";
+--NET "SRAM_A<8>" LOC = "P15";
+--NET "SRAM_A<9>" LOC = "P11";
+--NET "SRAM_A<10>" LOC = "P10";
+--NET "SRAM_A<11>" LOC = "P9";
+--NET "SRAM_A<12>" LOC = "P8";
+--NET "SRAM_A<13>" LOC = "P7";
+--NET "SRAM_A<14>" LOC = "P6";
+--NET "SRAM_A<15>" LOC = "P5";
+--NET "SRAM_A<16>" LOC = "P4";
+--NET "SRAM_D<0>" LOC = "P49";
+--NET "SRAM_D<1>" LOC = "P48";
+--NET "SRAM_D<2>" LOC = "P47";
+--NET "SRAM_D<3>" LOC = "P46";
+--NET "SRAM_D<4>" LOC = "P45";
+--NET "SRAM_D<5>" LOC = "P44";
+--NET "SRAM_D<6>" LOC = "P43";
+--NET "SRAM_D<7>" LOC = "P42";
+--NET "SRAM_D<8>" LOC = "P41";
+--NET "SRAM_D<9>" LOC = "P40";
+--NET "SRAM_D<10>" LOC = "P36";
+--NET "SRAM_D<11>" LOC = "P35";
+--NET "SRAM_D<12>" LOC = "P34";
+--NET "SRAM_D<13>" LOC = "P33";
+--NET "SRAM_D<14>" LOC = "P31";
+--NET "SRAM_D<15>" LOC = "P30";
+--NET "SRAM_CE_n" LOC = "P3";
+--NET "SRAM_WE_LowerByte_n" LOC = "P29";
+--NET "SRAM_WE_UpperByte_n" LOC = "P27";
+
+--#SLOTS E & F
+--NET "SRAM_A<0>" LOC = "P132";
+--NET "SRAM_A<1>" LOC = "P129";
+--NET "SRAM_A<2>" LOC = "P127";
+--NET "SRAM_A<3>" LOC = "P126";
+--NET "SRAM_A<4>" LOC = "P125";
+--NET "SRAM_A<5>" LOC = "P123";
+--NET "SRAM_A<6>" LOC = "P122";
+--NET "SRAM_A<7>" LOC = "P121";
+--NET "SRAM_A<8>" LOC = "P120";
+--NET "SRAM_A<9>" LOC = "P116";
+--NET "SRAM_A<10>" LOC = "P115";
+--NET "SRAM_A<11>" LOC = "P114";
+--NET "SRAM_A<12>" LOC = "P113";
+--NET "SRAM_A<13>" LOC = "P112";
+--NET "SRAM_A<14>" LOC = "P111";
+--NET "SRAM_A<15>" LOC = "P110";
+--NET "SRAM_A<16>" LOC = "P109";
+--NET "SRAM_D<0>" LOC = "P154";
+--NET "SRAM_D<1>" LOC = "P153";
+--NET "SRAM_D<2>" LOC = "P152";
+--NET "SRAM_D<3>" LOC = "P151";
+--NET "SRAM_D<4>" LOC = "P150";
+--NET "SRAM_D<5>" LOC = "P149";
+--NET "SRAM_D<6>" LOC = "P148";
+--NET "SRAM_D<7>" LOC = "P147";
+--NET "SRAM_D<8>" LOC = "P146";
+--NET "SRAM_D<9>" LOC = "P145";
+--NET "SRAM_D<10>" LOC = "P141";
+--NET "SRAM_D<11>" LOC = "P140";
+--NET "SRAM_D<12>" LOC = "P139";
+--NET "SRAM_D<13>" LOC = "P138";
+--NET "SRAM_D<14>" LOC = "P136";
+--NET "SRAM_D<15>" LOC = "P135";
+--NET "SRAM_CE_n" LOC = "P108";
+--NET "SRAM_WE_LowerByte_n" LOC = "P134";
+--NET "SRAM_WE_UpperByte_n" LOC = "P133";
+
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.STD_LOGIC_ARITH.ALL;
+use IEEE.STD_LOGIC_UNSIGNED.ALL;
+
+entity ChipPPtoSRAM is
+    Port (
+	 	Clk : in STD_LOGIC;
+		SingleLED : out STD_LOGIC;
+		Rst_n : in STD_LOGIC;
+		--Strobe_n : in STD_LOGIC;
+		--Auto_Linefeed_n : in STD_LOGIC;
+		D0 : in STD_LOGIC;
+		Error : out std_logic;
+		D1 : in STD_LOGIC;
+		--Initialise_Printer : in STD_LOGIC;
+		D2 : in STD_LOGIC;
+		--Select_Printer_n : in STD_LOGIC;
+		D3 : in STD_LOGIC;
+		D4 : in STD_LOGIC;
+		D5 : in STD_LOGIC;
+		D6 : in STD_LOGIC;
+		D7 : in STD_LOGIC;
+		Ack : out STD_LOGIC;
+		--Busy_n : out STD_LOGIC;
+		Paper_Out : out STD_LOGIC;
+		Select_In : out STD_LOGIC;
+		SRAM_A : out STD_LOGIC_VECTOR (16 downto 0);
+		SRAM_D : inout STD_LOGIC_VECTOR (15 downto 0);
+		SRAM_CE_n : out STD_LOGIC;
+		SRAM_WE_LowerByte_n : out STD_LOGIC;
+		SRAM_WE_UpperByte_n : out STD_LOGIC
+	);
+end ChipPPtoSRAM;
+
+architecture RTL of ChipPPtoSRAM is
+
+	component pctosraminterface
+	    port (
+		 	CLK: in STD_LOGIC;
+			Resetn : in STD_LOGIC;
+			Write: in STD_LOGIC;
+			Read: in STD_LOGIC;
+			NextSlice: in STD_LOGIC;
+			DataIn: in STD_LOGIC_VECTOR (4 downto 0);
+			DataOut: out STD_LOGIC_VECTOR (3 downto 0);
+			doSRAMWrite: out STD_LOGIC;
+			doSRAMRead: out STD_LOGIC;
+			canWrite: in STD_LOGIC;
+			canRead: in STD_LOGIC;
+			writeAddr: out STD_LOGIC_VECTOR (18 downto 0);
+			writeData: out STD_LOGIC_VECTOR (15 downto 0);
+			readAddr: out STD_LOGIC_VECTOR (18 downto 0);
+			readData: in STD_LOGIC_VECTOR (15 downto 0);
+			-- Ports used when embedding this interface in a user design:
+			active : out STD_LOGIC;
+			-- Ports we expose for debugging purposes:
+	    	portInSliceNum : out STD_LOGIC_VECTOR(1 downto 0);
+	    	portOutSliceNum : out STD_LOGIC_VECTOR(1 downto 0);
+	    	stateOutput : out STD_LOGIC_VECTOR(3 downto 0)
+	    );
+	end component;
+
+	component sraminterface
+	    port (
+	        CLK: in STD_LOGIC;								-- Clock signal.
+	        Resetn: in STD_LOGIC;							-- Asynchronous reset
+	        doRead: in STD_LOGIC;							-- Currently unused but may be used in future.							
+	        doWrite: in STD_LOGIC;							-- Set to perform a write.
+	        readAddr: in STD_LOGIC_VECTOR (18 downto 0);	-- Address to read from (user-side).
+	        writeAddr: in STD_LOGIC_VECTOR (18 downto 0);	-- Address to write to (user-side).
+	        readData: out STD_LOGIC_VECTOR (15 downto 0);	-- Data read (user-side).
+	        writeData: in STD_LOGIC_VECTOR (15 downto 0);	-- Data to write (user-side).
+	        canRead: out STD_LOGIC;							-- Is '1' when a read can be performed.							
+	        canWrite: out STD_LOGIC;						-- Is '1' when a write can be performed.
+	        CELeftn: out STD_LOGIC;							-- CEn signal to left SRAM bank.
+	        OELeftn: out STD_LOGIC;							-- OEn signal to left SRAM bank.
+	        WELeftn: out STD_LOGIC;							-- WEn signal to left SRAM bank.
+	        SRAMLeftAddr: out STD_LOGIC_VECTOR (18 downto 0);	-- Address bus to left SRAM bank.
+	        SRAMLeftData: inout STD_LOGIC_VECTOR (15 downto 0)	-- Data bus to left SRAM bank.
+	    );
+	end component;
+
+	signal doSRAMWrite	: STD_LOGIC;
+	signal doSRAMRead		: STD_LOGIC;
+	signal canWrite 		: STD_LOGIC;
+	signal canRead 		: STD_LOGIC;
+   signal writeAddr 		: STD_LOGIC_VECTOR (18 downto 0);
+   signal writeData 		: STD_LOGIC_VECTOR (15 downto 0);
+   signal readAddr 		: STD_LOGIC_VECTOR (18 downto 0);
+   signal readData 		: STD_LOGIC_VECTOR (15 downto 0);
+
+	signal ppdata 			: STD_LOGIC_VECTOR(7 downto 0);
+	signal ppstatus 		: STD_LOGIC_VECTOR(6 downto 3);
+	signal laddr 			: STD_LOGIC_VECTOR(18 downto 0);
+	signal loen				: STD_LOGIC;
+
+begin
+
+	SingleLED <= '0';
+
+	ppdata(0) <= not D0; -- Inverted by XSV RAM utility.
+	ppdata(1) <= not D1; -- Inverted by XSV RAM utility.
+	ppdata(2) <= D2;
+	ppdata(3) <= D3;
+	ppdata(4) <= D4;
+	ppdata(5) <= D5;
+	ppdata(6) <= D6;
+	ppdata(7) <= D7;
+	
+	Error 		<= ppstatus(3);
+	Select_In 	<= ppstatus(4);
+	Paper_Out 	<= ppstatus(5);
+	Ack 			<= ppstatus(6);
+
+	SRAM_A(16 downto 0) <= laddr(16 downto 0);  -- laddr bits 17 & 18, not used
+	SRAM_CE_n <= '0';
+	SRAM_WE_LowerByte_n <= not loen;
+	SRAM_WE_UpperByte_n <= not loen;
+
+	pctofpgainterface : pctosraminterface port map (
+      CLK => Clk,
+      Resetn => Rst_n,
+		Write => ppdata(5),
+		Read => ppdata(6),
+		NextSlice => ppdata(7),
+		DataIn(4 downto 0) => ppdata(4 downto 0),
+		DataOut(3 downto 0) => ppstatus(6 downto 3),
+		doSRAMWrite => doSRAMWrite,
+      doSRAMRead => doSRAMRead,
+      canWrite => canWrite,
+      canRead => canRead,
+      writeAddr => writeAddr,
+      writeData => writeData,
+      readAddr => readAddr,
+      readData => readData,
+		active 						=> open,
+		portInSliceNum 			=> open,
+    	portOutSliceNum 			=> open,
+    	stateOutput(3 downto 0) => open
+    );
+		
+	fpgatosraminterface : sraminterface port map (
+        CLK => Clk,
+        Resetn => Rst_n,
+        doRead => doSRAMRead,
+        doWrite => doSRAMWrite,
+        readAddr => readAddr,
+        writeAddr => writeAddr,
+        readData => readData,
+        writeData => writeData,
+        canRead => canRead,
+        canWrite => canWrite,
+        CELeftn => open,
+        OELeftn => loen,
+        WELeftn => open,
+        SRAMLeftAddr => laddr,
+        SRAMLeftData => SRAM_D
+    );	
+
+end RTL;
+
+
